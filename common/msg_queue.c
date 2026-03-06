@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include "msg_queue.h"
 
+/**
+ * 
+ */
+
 int msg_create()
 {
     key_t key = ftok("/tmp", 1);
