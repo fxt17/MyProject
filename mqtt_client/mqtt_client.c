@@ -59,7 +59,6 @@ void on_message(struct mosquitto *mosq, void *userdata, const struct mosquitto_m
 int main()
 {
     struct mosquitto *mosq;
-    int usr_pw_set, connect;
 
     /* 初始化mosquitto库 */
     mosquitto_lib_init();
@@ -93,6 +92,8 @@ int main()
     }
     printf("MQTT connected\n");
 
+    mosquitto_loop_start(mosq);
+
     int msgid = msg_create();
     msg_t msg;  // buffer for storing msg
 
@@ -114,9 +115,6 @@ int main()
 
         /* publish */
         mosquitto_publish(mosq, NULL, MQTT_TOPIC, strlen(payload), payload, 0, false);
-
-        /* 处理网络 */
-        mosquitto_loop(mosq, 100, 1);
     }
 
     mosquitto_destroy(mosq);
