@@ -12,6 +12,7 @@
 #define MQTT_USER "zj98082da66alcoz"
 #define MQTT_PASS "DNNnDVmJAB"
 #define MQTT_TOPIC "attributes"
+#define SUB_TOPIC "data/led/set"
 
 /* 连接回调 */
 void on_connect(struct mosquitto *mosq, void *userdata, int rc)
@@ -32,13 +33,27 @@ void on_connect(struct mosquitto *mosq, void *userdata, int rc)
 /* 接收消息回调 */
 void on_message(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *msg)
 {
-    printf("Receive topic: %s\n", msg->topic);
-    printf("Payload: %s\n", (char *)msg->payload);
+    char buf[256];
 
-    if(strcmp((char*)msg->payload, "LED_ON") == 0)
-        printf("LED on\n");
-    else if(strcmp((char*)msg->payload, "LED_OFF") == 0)
-        printf("LED off\n");
+    memcpy(buf, msg->payload, msg->payloadlen);
+    buf[msg->payloadlen] = '\0';
+
+    printf("Receive topic: %s\n", msg->topic);
+    printf("Payload: %s\n", buf);
+
+    char led_cmd[32];
+
+    if(sscanf(buf, "{\"LED\":\"%[^\"]\"}", led_cmd) == 1)
+    {
+        if(strcmp(led_cmd, "LED_ON") == 0)
+        {
+            printf("LED on\n");
+        }
+        else if(strcmp(led_cmd, "LED_OFF") == 0)
+        {
+            printf("LED off\n");
+        }
+    }
 }
 
 int main()
