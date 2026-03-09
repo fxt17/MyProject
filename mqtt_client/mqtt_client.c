@@ -33,7 +33,7 @@ int main()
     if(usr_pw_set != MOSQ_ERR_SUCCESS)
     {
         printf("mosquitto_username_pw_set failed\n");
-        return -1
+        return -1;
     }
 
     /* 连接服务器 */
