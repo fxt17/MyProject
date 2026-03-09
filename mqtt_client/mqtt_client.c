@@ -13,6 +13,34 @@
 #define MQTT_PASS "DNNnDVmJAB"
 #define MQTT_TOPIC "attributes"
 
+/* 连接回调 */
+void on_connect(struct mosquitto *mosq, void *userdata, int rc)
+{
+    if(rc == 0)
+    {
+        printf("Connected to MQTT Broker\n");
+
+        /* 订阅控制主题 */
+        mosquitto_subscribe(mosq, NULL, SUB_TOPIC, 0);
+    }
+    else
+    {
+        printf("Connect failed: %d\n", rc);
+    }
+}
+
+/* 接收消息回调 */
+void on_message(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *msg)
+{
+    printf("Receive topic: %s\n", msg->topic);
+    printf("Payload: %s\n", (char *)msg->payload);
+
+    if(strcmp((char*)msg->payload, "LED_ON") == 0)
+        printf("LED on\n");
+    else if(strcmp((char*)msg->payload, "LED_OFF") == 0)
+        printf("LED off\n");
+}
+
 int main()
 {
     struct mosquitto *mosq;
@@ -29,16 +57,21 @@ int main()
     }
 
     /* 设置用户名密码 */
-    usr_pw_set = mosquitto_username_pw_set(mosq, MQTT_USER, MQTT_PASS);// set username and password
-    if(usr_pw_set != MOSQ_ERR_SUCCESS)
+    if(mosquitto_username_pw_set(mosq, MQTT_USER, MQTT_PASS) != MOSQ_ERR_SUCCESS)
     {
         printf("mosquitto_username_pw_set failed\n");
         return -1;
-    }
+    }// set username and password
+
+    /* 设置回调 */
+    mosquitto_connect_callback_set(mosq, on_connect);
+    mosquitto_message_callback_set(mosq, on_message);
+
+    /* 自动重连 */
+    mosquitto_reconnect_delay_set(mosq, 2, 10, true);//最小重连等待时间2s，指数退避为true时重连时间递增至10s，若为false则固定2s重连
 
     /* 连接服务器 */
-    connect = mosquitto_connect(mosq, MQTT_HOST, MQTT_PORT, 60);
-    if(connect != MOSQ_ERR_SUCCESS)
+    if(mosquitto_connect(mosq, MQTT_HOST, MQTT_PORT, 60) != MOSQ_ERR_SUCCESS)
     {
         printf("mosquitto_connect failed\n");
         return -1;
